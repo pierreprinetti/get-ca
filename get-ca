@@ -40,6 +40,11 @@ while getopts p:h opt; do
 done
 shift "$((OPTIND-1))"
 
+if [ "$#" -ne 1 ]; then
+	>&2 echo "${0} requires one positional argument: the target host."
+	exit 2
+fi
+
 target_host="$1"
 
 echo -n \
