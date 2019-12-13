@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+declare target_host='' \
+	target_port="443"
+
+declare -r \
+	cert_start_marker='-----BEGIN CERTIFICATE-----' \
+	cert_end_marker='-----END CERTIFICATE-----'
+
+
+print_help() {
+	echo 'get-ca'
+	echo
+	echo 'Prints the last certificate in the trust chain sent by an HTTPS server.'
+	echo
+	echo -e 'Requirements:'
+	echo -e '\t* openssl'
+	echo
+	echo -e 'Usage:'
+	echo -e "${0} [-p target_port] target_host"
+	echo -e '\t-p\tSpecify the port to connect to. Defaults to 443.'
+	echo -e '\t-h\tPrint this help'
+}
+
+unknown_flag() {
+	print_help
+	exit 1
+}
+
+
+# Parse flags
+while getopts p:h opt; do
+	case "$opt" in
+		p) target_port="$OPTARG" ;;
+		h) print_help; exit 0    ;;
+		*) unknown_flag          ;;
+	esac
+done
+shift "$((OPTIND-1))"
+
+target_host="$1"
+
+echo -n \
+	| openssl s_client -showcerts -servername "$target_host" -connect "${target_host}:${target_port}" 2>/dev/null \
+	| tac \
+	| sed -n "/${cert_end_marker}/,/${cert_start_marker}/p;/${cert_start_marker}/q" \
+	| tac
