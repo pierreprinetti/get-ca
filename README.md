@@ -5,8 +5,7 @@ Prints the last certificate in the trust chain sent by an HTTPS server. This usu
 # Use
 
 ```shell
-./get-ca [-p target_port] target_host
+./get-ca target_host[:port]
 ```
 
-* `-p` Specify the port to connect to. Defaults to 443.
 * `-h` Print this help

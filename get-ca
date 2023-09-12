@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 declare target_host='' \
-	target_port="443"
+	target_port=''
 
 declare -r \
 	cert_start_marker='-----BEGIN CERTIFICATE-----' \
@@ -31,9 +31,8 @@ unknown_flag() {
 
 
 # Parse flags
-while getopts p:h opt; do
+while getopts h opt; do
 	case "$opt" in
-		p) target_port="$OPTARG" ;;
 		h) print_help; exit 0    ;;
 		*) unknown_flag          ;;
 	esac
@@ -41,11 +40,15 @@ done
 shift "$((OPTIND-1))"
 
 if [ "$#" -ne 1 ]; then
-	>&2 echo "${0} requires one positional argument: the target host."
+	>&2 echo "${0} requires one positional argument: the target host[:port]."
 	exit 2
 fi
 
-target_host="$1"
+target_host="${1%:*}"
+target_port="${1##*:}"
+if [[ "$target_port" == "$target_host" ]]; then
+	target_port=443
+fi
 
 echo -n \
 	| openssl s_client -showcerts -servername "$target_host" -connect "${target_host}:${target_port}" 2>/dev/null \
